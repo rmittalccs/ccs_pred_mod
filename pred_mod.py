@@ -127,8 +127,9 @@ def main(verbose=0, columns_to_drop=None):
             if col in df_cd.keys().to_list():
                 df_cd = df_cd.drop(columns=col)
 
-    # ### **Spouse**
-    # ##############
+    
+    ### **Spouse**
+    ##############
 
     if verbose==1:
         print("Checking has_spouse_binary")
