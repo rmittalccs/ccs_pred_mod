@@ -34,8 +34,8 @@ from sklearn.svm import SVR
 from xgboost import plot_tree
 
 
-### **Functions**
-#################
+### Functions
+#############
 
 today = datetime.today()
 
@@ -103,8 +103,8 @@ DEFAULT_COLUMNS_TO_DROP = ["Unnamed: 0", "org_name", "wealth_screen_data", "attr
 
 def main(verbose=0, columns_to_drop=None):
 
-    ### **Constituent File**
-    ########################
+    ### Constituent File
+    ####################
 
     if verbose==1:
         print("Reading the constituent file")
@@ -116,8 +116,8 @@ def main(verbose=0, columns_to_drop=None):
     df_cd = pd.read_csv(myfile, encoding="ISO-8859-1")
 
 
-    ### **Drop unwanted columns**
-    #############################
+    ### Drop unwanted columns
+    #########################
 
     #columns_to_drop=["Unnamed: 0", "org_name", "wealth_screen_data", "attributes"]
     if columns_to_drop is not None:
@@ -128,8 +128,8 @@ def main(verbose=0, columns_to_drop=None):
                 df_cd = df_cd.drop(columns=col)
 
     
-    ### **Spouse**
-    ##############
+    ### Spouse
+    ##########
 
     if verbose==1:
         print("Checking has_spouse_binary")
@@ -140,8 +140,8 @@ def main(verbose=0, columns_to_drop=None):
     df_cd = df_cd.drop(columns=columns_to_drop)
 
 
-    ### **Date to Age in Decimal**
-    ##############################
+    ### Date to Age in Decimal
+    ##########################
 
     if verbose==1:
         print("Date to Age in Decimal")
@@ -155,8 +155,8 @@ def main(verbose=0, columns_to_drop=None):
         df_cd = df_cd.drop(columns=[col])
         df_cd[col] = ages_decimal
 
-    ### **Age Binning**
-    ###################
+    ### Age Binning
+    ###############
 
     if verbose==1:
         print("Age binning")
@@ -176,8 +176,8 @@ def main(verbose=0, columns_to_drop=None):
     column_mapping = {binary_ages.keys().to_list()[i]:binary_column_names[i] for i in range(len(binary_ages.keys()))}
     df_cd.rename(columns=column_mapping, inplace=True)
 
-    ### **Dates to Days**
-    #####################
+    ### Dates to Days
+    #################
 
     if verbose==1:
         print("Dates to Days")
@@ -190,8 +190,8 @@ def main(verbose=0, columns_to_drop=None):
         df_cd = df_cd.drop(columns=col)
         df_cd[col] = col_days
 
-    ### **Prefix**
-    ##############
+    ### Prefix
+    ##########
 
     if verbose==1:
         print("Checking if Prefix has Dr. or Prof.")
@@ -200,8 +200,8 @@ def main(verbose=0, columns_to_drop=None):
     df_cd["prefix_has_dr_binary"] = df_cd["prefix"].str.contains(r"(dr|prof)", case=False).astype(int)
     df_cd = df_cd.drop(columns=["prefix"])
 
-    ### **Incomplete address**
-    ##########################
+    ### Incomplete address
+    ######################
 
     if verbose==1:
         print("Incomplete Address")
@@ -209,8 +209,8 @@ def main(verbose=0, columns_to_drop=None):
     df_cd["incomplete_address_binary"] = ((df_cd['address_1'].isna()) | (df_cd['home_city'].isna()) | \
                                 (df_cd['home_state'].isna()) | (df_cd['zip'].astype(str).str.len() < 5)).astype(int)
 
-    ### **Presence/Absence**
-    ########################
+    ### Presence/Absence
+    ####################
 
     if verbose==1:
         print("Presence/Absence in columns to binary")
@@ -230,8 +230,8 @@ def main(verbose=0, columns_to_drop=None):
     # Concatenate the binary columns with the original DataFrame
     df_cd = pd.concat([df_cd, binary_df], axis=1)
 
-    ### **TOP 5 BINARIES**
-    ######################
+    ### TOP 5 BINARIES
+    ##################
 
     if verbose==1:
         print("Top-5 Binaries")
@@ -253,8 +253,8 @@ def main(verbose=0, columns_to_drop=None):
     for col in columns:
         df_cd = melt_ntop(df=df_cd, ntop=5, column=col)
 
-    ### **Filters and Indicators**
-    ##############################
+    ### Filters and Indicators
+    ##########################
 
     df_cd = df_cd.drop(columns=["is_deceased", "is_individual"])
     df_cd = df_cd[(df_cd["deceased"].str.contains("no", case=False)) & \
@@ -262,8 +262,8 @@ def main(verbose=0, columns_to_drop=None):
                 (df_cd["home_country"].str.contains("USA|U\.S\.A\.|United States|America", case=False)) ]
     df_indicators = pd.concat([df_cd.pop(col) for col in ["deceased", "key_indicator"]], axis=1)
 
-    ### **Taggers**
-    ###############
+    ### Taggers
+    ###########
 
     column_taggers = ["first_name", "last_name", "home_country", "address_1", "zip",\
                     "current_trustee", "past_trustee", "assigned_manager", \
@@ -272,8 +272,8 @@ def main(verbose=0, columns_to_drop=None):
     df_taggers = pd.concat([df_cd.pop(col) for col in column_taggers], axis=1)
     df_taggers["constituent_id"] = df_cd["constituent_id"]
 
-    ### **Sklearn -- preprocessing**
-    ################################
+    ### Sklearn -- preprocessing
+    ############################
 
     if verbose==1:
         print("Sklearn -- preprocessing")
@@ -326,8 +326,8 @@ def main(verbose=0, columns_to_drop=None):
     final = final.dropna(how="any")
     m_giving_logp1 = final.pop('m_giving_logp1')
 
-    ### **Feature Selection**
-    #########################
+    ### Feature Selection
+    #####################
 
     if verbose==1:
         print("Feature Selection")
@@ -337,7 +337,7 @@ def main(verbose=0, columns_to_drop=None):
     ### All columns
     xcol_all = final.keys().tolist()
 
-    ### **Variance Threshold**
+    ### Variance Threshold
     X = final[xcol_all]
     for threshold in [0.01, 0.05, 0.1]:
         selector = VarianceThreshold(threshold=threshold)
@@ -347,7 +347,7 @@ def main(verbose=0, columns_to_drop=None):
         ncols = len(cols)
         globals() ["xcol_var_%d" %(threshold*100)] = X.iloc[:,cols].columns.tolist()
 
-    ### **F_Statistic Threshold**
+    ### F_Statistic Threshold
     q = 0.01
     dfn = 1
     dfd = len(X) - 2
@@ -359,7 +359,7 @@ def main(verbose=0, columns_to_drop=None):
     cols_f_stat = list(np.where(f_stat>f01)[0])
     xcol_f_stat = X.iloc[:,cols_f_stat].columns.tolist()
 
-    ### **Pearson_R Threshold**
+    ### Pearson_R Threshold
     X = final[xcol_all]
     r_pearson = np.abs(r_regression(X, y))
     cols = list(np.where(r_pearson>=np.mean(r_pearson))[0])
@@ -367,8 +367,8 @@ def main(verbose=0, columns_to_drop=None):
     xcol_rpearson_mean = X.iloc[:,cols].columns.tolist()
     len(xcol_rpearson_mean)
 
-    ### **Recursive Feature Elimination**
-    #####################################
+    ### Recursive Feature Elimination
+    #################################
 
     if verbose==1:
         print("Recursive Feature Elimination")
@@ -396,8 +396,8 @@ def main(verbose=0, columns_to_drop=None):
             globals()["xcol_rfecv_%s" %est] = X.iloc[:,cols].columns.tolist()
             print("Estimator:", est, "No_of_features:", len(cols))
 
-    ### **Model Fitting**
-    #####################
+    ### Model Fitting
+    #################
 
     if verbose==1:
         print("Model Fitting")
