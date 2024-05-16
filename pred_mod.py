@@ -101,20 +101,42 @@ def bin_and_convert_to_binary(ages):
 
 DEFAULT_COLUMNS_TO_DROP = ["Unnamed: 0", "org_name", "wealth_screen_data", "attributes"]
 
-def main(verbose=0, columns_to_drop=None):
+def main(df_cd=None, verbose=0, columns_to_drop=DEFAULT_COLUMNS_TO_DROP):
+    """
+    The main function for processing data.
+
+    Parameters:
+    - verbose (int): Level of verbosity for logging information. Default is 0 (no logging).
+    - df_cd (pandas.DataFrame or None): If None, the function reads data from a file. 
+      Otherwise, a DataFrame from R is passed.
+    - columns_to_drop (list): List of column names to be dropped from the DataFrame. 
+      Default is DEFAULT_COLUMNS_TO_DROP.
+
+    Returns:
+    - df_final (pandas.DataFrame or None): The processed DataFrame with scores.
+    """
+
+    ### Initialize df_final (for experiments, mostly)
+    #################################################
+
+    df_final = None 
 
     ### Constituent File
     ####################
 
-    if verbose==1:
-        print("Reading the constituent file")
+    if df_cd is None:
+        if verbose==1:
+            print("Reading the constituent file")
 
-    client = "national_scleroderma_foundation"
-    path = "/home/RMittal@ccsfundraising.com/ccs_pred_mod"
-    filename =  "%s_constituent_ccsdb.csv" %(client)
-    myfile = "%s/%s" %(path, filename)
-    df_cd = pd.read_csv(myfile, encoding="ISO-8859-1")
-
+        client = "national_scleroderma_foundation"
+        path = "/home/RMittal@ccsfundraising.com/ccs_pred_mod"
+        filename =  "%s_constituent_ccsdb.csv" %(client)
+        myfile = "%s/%s" %(path, filename)
+        df_cd = pd.read_csv(myfile, encoding="ISO-8859-1")
+        if (verbose==1):
+            print("Number of lines read:", len(df_cd))
+    else:
+        print("Data being read from dataframe: %d lines read" %(len(df_cd)))
 
     ### Drop unwanted columns
     #########################
@@ -546,6 +568,8 @@ def main(verbose=0, columns_to_drop=None):
     # plt.title('Distribution of Residuals')
     # plt.savefig("%s_pred_mod_residuals_hist.jpg" %client, bbox_inches="tight")
 
+    return df_cd.head()
+
 ### Argument Parser
 ###################
 
@@ -556,8 +580,10 @@ if __name__ == "__main__":
         help="Set verbosity level (0: no verbose, 1: medium, 2: high)")
     parser.add_argument("-c", "--columns-to-drop", nargs='+', default=DEFAULT_COLUMNS_TO_DROP, \
         help="Columns to drop from the dataframe (default: %(default)s)")
+    parser.add_argument("-d", "--df-cd", default=None,
+        help="Dataframe containing constituents data to use for predictive modeling (default: %(default)s)")
     args = parser.parse_args()
-    main(verbose=args.verbose, columns_to_drop=args.columns_to_drop)
+    main(df_cd=args.df_cd, verbose=args.verbose, columns_to_drop=args.columns_to_drop)
 
 
 
